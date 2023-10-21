@@ -72,10 +72,16 @@ class BaselineNLPFlow(FlowSpec):
     @step
     def baseline(self):
         "Compute the baseline"
+        from sklearn.dummy import DummyClassifier
+        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import roc_auc_score
 
         ### TODO: Fit and score a baseline model on the data, log the acc and rocauc as artifacts.
-        self.base_acc = 0.0
-        self.base_rocauc = 0.0
+        dummy_model = DummyClassifier()
+        dummy_model.fit(self.traindf.drop("label",axis=1),self.traindf["label"])
+        self.preds = dummy_model.predict(self.valdf["label"])
+        self.base_acc = accuracy_score(self.valdf["label"],self.preds)
+        self.base_rocauc = roc_auc_score(self.valdf["label"],self.preds)
 
         self.next(self.end)
 
@@ -95,11 +101,18 @@ class BaselineNLPFlow(FlowSpec):
         # TODO: compute the false positive predictions where the baseline is 1 and the valdf label is 0.
         # TODO: display the false_positives dataframe using metaflow.cards
         # Documentation: https://docs.metaflow.org/api/cards#table
-
+        fp_mask = (self.preds == 1) & (self.valdf["label"] == 0)
+        false_positives = self.valdf[fp_mask]
+        if not false_positives.empty: 
+            current.card.append(Table(false_positives.values.tolist()))
+            
         current.card.append(Markdown("## Examples of False Negatives"))
         # TODO: compute the false positive predictions where the baseline is 0 and the valdf label is 1.
         # TODO: display the false_negatives dataframe using metaflow.cards
-
-
+        fn_mask = (self.preds == 0) & (self.valdf["label"] == 1)
+        false_negatives = self.valdf[fn_mask]
+        if not false_negatives.empty: 
+            current.card.append(Table(false_negatives.values.tolist()))
+        
 if __name__ == "__main__":
     BaselineNLPFlow()
