@@ -55,7 +55,8 @@ class BaselineNLPFlow(FlowSpec):
         # Train and score the baseline model
         dummy_model = DummyClassifier(strategy="most_frequent")
         dummy_model.fit(self.traindf["review"],self.traindf["label"])
-        self.preds = dummy_model.predict(self.valdf["label"])
+        self.probas = dummy_model.predict_proba(self.valdf["review"])[:,1]
+        self.preds = dummy_model.predict(self.valdf["review"])
         self.base_acc = accuracy_score(self.valdf["label"],self.preds)
         self.base_rocauc = roc_auc_score(self.valdf["label"],self.preds)
 
