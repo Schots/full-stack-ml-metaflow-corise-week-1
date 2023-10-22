@@ -58,7 +58,7 @@ class BaselineNLPFlow(FlowSpec):
         self.probas = dummy_model.predict_proba(self.valdf["review"])[:,1]
         self.preds = dummy_model.predict(self.valdf["review"])
         self.base_acc = accuracy_score(self.valdf["label"],self.preds)
-        self.base_rocauc = roc_auc_score(self.valdf["label"],self.preds)
+        self.base_rocauc = roc_auc_score(self.valdf["label"],self.probas)
 
         self.next(self.end)
 
